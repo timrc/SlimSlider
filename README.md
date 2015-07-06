@@ -1,0 +1,2 @@
+# SlimSlider
+jQuery Slider
