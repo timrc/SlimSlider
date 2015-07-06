@@ -1,4 +1,4 @@
 # SlimSlider
-jQuery Slider
+jQuery Slider, touch enabled
 
 Demo: http://codepen.io/timrc/pen/yNKVje
