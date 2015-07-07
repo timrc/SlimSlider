@@ -19,6 +19,9 @@
       init_sections: 0,
       snap: !0,
       label: '',
+      sections: true,
+      bar: false,
+      bubble: true,
       decimal_places: 2
     }, options);
 
@@ -43,7 +46,7 @@
       var $sliderProgressBarContainer = $('<div/>').addClass('progress-bar--container');
       var $sliderProgressBarActive = $('<div/>').addClass('progress-bar-active');
       var $sliderProgressBarSecondary = $('<div/>').addClass('progress-bar-secondary');
-      $sliderProgressBarSecondary.appendTo($sliderProgressBarContainer);
+      // $sliderProgressBarSecondary.appendTo($sliderProgressBarContainer);
       $sliderProgressBarActive.appendTo($sliderProgressBarContainer);
       $sliderProgressBarContainer.appendTo($sliderProgressBar);
       $sliderProgressBar.appendTo($sliderProgress);
@@ -68,46 +71,50 @@
         'active_section': 0,
         'settings': settings,
         'slider': $slider,
+        'bar': $sliderProgressBarActive,
         'knob': $sliderKnob,
         'bubble': $bubble,
         'bubbleContent': $bubbleContent
       };
 
+      if(settings.sections) {
+        if(settings.items.length) {
+              var sections = settings.items.length;
+            for (var section = 0; section < sections; section++) {
+              var newpos = ((section / (sections-1)) * 100);
+              var $section = $('<div/>').addClass('progress-section').css({
+                'left': newpos + '%'
+              }).attr('data-id', section);
 
-      if(settings.items.length) {
-            var sections = settings.items.length;
-          for (var section = 0; section < sections; section++) {
-            var newpos = ((section / (sections-1)) * 100);
-            var $section = $('<div/>').addClass('progress-section').css({
-              'left': newpos + '%'
-            });
+              var $sectionText = $('<div/>').addClass('progress-section--text').html(settings.items[section]);
+              $sectionText.appendTo($section)
 
-            var do_append = true;
-            if (section == 0 || section == (sections-1) || section % settings.frequency == 0) {
-                $section.addClass('progress-section--major');
-            }
-            else {
-                if(!settings.intermediate) {
-                    do_append = false;
-                }
-            }
+              var do_append = true;
+              if (section == 0 || section == (sections-1) || section % settings.frequency == 0) {
+                  $section.addClass('progress-section--major');
+              }
+              else {
+                  if(!settings.intermediate) {
+                      do_append = false;
+                  }
+              }
 
-            if(do_append) {
-                $section.appendTo($sliderProgressSections);
+              if(do_append) {
+                  $section.appendTo($sliderProgressSections);
+              }
             }
-          }
+        }
+        else {
+            for (var newpos = 0; newpos <= 100; newpos+=settings.frequency) {
+              var $section = $('<div/>').addClass('progress-section').css({
+                'left': newpos + '%'
+              });
+
+              $section.addClass('progress-section--major');
+              $section.appendTo($sliderProgressSections);
+            }
+        }
       }
-      else {
-          for (var newpos = 0; newpos <= 100; newpos+=settings.frequency) {
-            var $section = $('<div/>').addClass('progress-section').css({
-              'left': newpos + '%'
-            });
-
-            $section.addClass('progress-section--major');
-            $section.appendTo($sliderProgressSections);
-          }
-      }
-
 
       $slider.on('mouseover', function(e) {
         $(this).addClass('expand');
@@ -122,9 +129,11 @@
         if (active) return;
         active = $(this).data('id');
         var slider = sliders[active];
+        
+        var newleft = e.pageX - slider.slider.offset().left;
 
         slider.knob.animate({
-          'left': e.offsetX + 'px'
+          'left':newleft + 'px'
         }, 10, function() {
           set_new_section(slider);
         });
@@ -187,8 +196,10 @@
 
           var pos = slider.knob.position();
           var left = pos.left;
-          var movement = e.movementX;
-          var newleft = left + movement;
+          
+          var newleft = e.pageX - slider.slider.offset().left;
+          //var movement = e.movementX;
+          //var newleft = left + movement;
           newleft = newleft < min_left ? min_left : newleft > max_left ? max_left : newleft;
           slider.knob.css({
             'left': newleft + 'px'
@@ -238,6 +249,8 @@
         });
         slider['active_section'] = n;
         set_section(slider, n);
+        
+        $('.progress-section[data-id="'+n+'"]', slider.slider).addClass('active');
 
         slider.knob.css({
           'opacity': 1
@@ -265,6 +278,10 @@
               newn = newn_up;
             }
 
+            if(slider.settings.bar) {
+              slider.bar.css({'width': pos.left + 'px'});
+            }
+
             if (snap) {
               set_section(slider, newn);
             } else {
@@ -272,6 +289,9 @@
               if (newn != slider['active_section']) {
                 slider['active_section'] = newn;
                 set_bubble_text(slider, slider.settings.items[newn]);
+                
+                $('.progress-section.active', slider.slider).removeClass('active');
+                $('.progress-section[data-id="'+newn+'"]', slider.slider).addClass('active');
               }
             }
         } else {
@@ -292,6 +312,10 @@
         });
 
         set_bubble(slider, n);
+
+        if(slider.settings.bar) {
+          slider.bar.css({'width': section_pos + 'px'});
+        }
       }
 
       function position_bubble(slider, left) {
@@ -326,7 +350,10 @@
 var items = ['mammals', 'birds', 'fishes', 'reptiles', 'amphibians', 'invertebrates'];
 $('.container').slimSlider({
     'label': '.container-label',
-    'items': items
+    'items': items,
+    'sections': true,
+    'bar': true,
+    'snap': !0
 });
 
 $('.numbers').slimSlider({
